@@ -170,6 +170,13 @@ local plugins = {
     opts = {}                          -- your configuration
   },
 
+  {
+    "szw/vim-maximizer",
+    keys = {
+      { "<leader>z", "<cmd>MaximizerToggle<CR>", desc = "Toggle window zoom" }
+    }
+  },
+
   -- require plugins with more complex config
 
   require 'core.plugins.todo-comments',
