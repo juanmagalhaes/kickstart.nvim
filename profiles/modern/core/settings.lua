@@ -64,22 +64,43 @@ vim.notify = function(msg, level, opts)
     return -- Don't show these messages
   end
   
-  -- Show important messages (errors, warnings)
+  -- Route errors and warnings through noice.nvim (top-right floating)
   if level == vim.log.levels.ERROR or level == vim.log.levels.WARN then
-    return original_notify(msg, level, opts)
+    -- Try to use noice.nvim if available
+    local ok, noice = pcall(require, 'noice')
+    if ok and noice.notify then
+      return noice.notify(msg, level, opts)
+    else
+      -- Fallback to original vim.notify for errors/warnings
+      return original_notify(msg, level, opts)
+    end
   end
   
-  -- Block most info messages unless they're important
-  if level == vim.log.levels.INFO then
-    -- Only show profile loading and critical info
+  -- Route info and debug messages through bottom bar (less intrusive)
+  if level == vim.log.levels.INFO or level == vim.log.levels.DEBUG then
+    -- Only show important info messages
     if message:match('loading profile') or message:match('error') then
       return original_notify(msg, level, opts)
     end
-    return -- Block other info messages
+    -- Block other info messages to reduce noise
+    return
   end
-  
-  -- Show debug messages (if any)
+
+  -- Default: use original vim.notify (bottom bar)
   return original_notify(msg, level, opts)
+end
+
+-- Override vim.api.nvim_err_writeln to use noice.nvim for errors
+local original_err_writeln = vim.api.nvim_err_writeln
+vim.api.nvim_err_writeln = function(str)
+  -- Route errors through noice.nvim
+  local ok, noice = pcall(require, 'noice')
+  if ok and noice.notify then
+    noice.notify(str, vim.log.levels.ERROR)
+  else
+    -- Fallback to original
+    original_err_writeln(str)
+  end
 end
 
 -- vim: ts=2 sts=2 sw=2 et

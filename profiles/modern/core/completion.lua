@@ -44,11 +44,24 @@ cmp.setup({
         return
       end
       
-      -- Simple completion trigger
-      if cmp.visible() then
-        cmp.close()
-      else
-        cmp.complete()
+      -- Simple completion trigger with error handling
+      local ok, result = pcall(function()
+        if cmp.visible() then
+          cmp.close()
+        else
+          cmp.complete()
+        end
+      end)
+      
+      if not ok then
+        -- Route completion errors through noice.nvim
+        local ok_noice, noice = pcall(require, 'noice')
+        if ok_noice and noice.notify then
+          noice.notify('Completion error: ' .. tostring(result), vim.log.levels.ERROR)
+        else
+          -- Fallback to vim.notify
+          vim.notify('Completion error: ' .. tostring(result), vim.log.levels.ERROR)
+        end
       end
     end),
     ['<C-e>'] = cmp.mapping.close(),

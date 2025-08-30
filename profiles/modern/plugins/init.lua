@@ -387,19 +387,14 @@ local plugins = {
             },
           },
         },
-        -- Disable general message notifications to stop the noise
-        messages = {
-          enabled = false,
-        },
-        -- Only show critical notifications (errors, warnings)
-        -- Disable info notifications that are just noise
+        -- Configure notifications to show through noice.nvim
         notify = {
           enabled = true,
           view = 'notify',
-          -- Only show errors and warnings
-          filter = function(notification)
-            return notification.level >= vim.log.levels.WARN
-          end,
+        },
+        -- Only handle specific message types through noice.nvim
+        messages = {
+          enabled = false, -- Let regular messages go to bottom bar
         },
         popupmenu = {
           enabled = true,

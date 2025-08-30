@@ -145,6 +145,40 @@ vim.keymap.set('n', '<leader>ntn', function()
   vim.notify('This is a test INFO message', vim.log.levels.INFO)
 end, { desc = 'Test notifications' })
 
+-- Test notification routing (temporary - remove after testing)
+vim.keymap.set('n', '<leader>ntr', function()
+  -- This should go through noice.nvim (top-right floating)
+  vim.notify('This ERROR should appear in top-right floating notification', vim.log.levels.ERROR)
+  
+  -- This should go through bottom bar (less intrusive)
+  vim.notify('This INFO message should appear in bottom bar', vim.log.levels.INFO)
+  
+  -- This should be blocked completely (spam)
+  vim.notify('2 fewer lines; before #1 3 seconds ago', vim.log.levels.INFO)
+end, { desc = 'Test notification routing' })
+
+-- Test completion error simulation (temporary - remove after testing)
+vim.keymap.set('n', '<leader>nte', function()
+  -- Simulate the type of error that Ctrl+Space might generate
+  vim.api.nvim_err_writeln('Error: bufnr: expected number, got function')
+  vim.api.nvim_echo({{'Error: completion system failed', 'ErrorMsg'}}, true, {})
+end, { desc = 'Test completion error routing' })
+
+-- Test error capture analysis (temporary - remove after testing)
+vim.keymap.set('n', '<leader>nta', function()
+  -- This will help us see what type of error display the completion system uses
+  vim.notify('Testing error routing - this should go to noice.nvim', vim.log.levels.ERROR)
+  
+  -- Try to trigger a completion-related error to see how it's displayed
+  local ok, cmp = pcall(require, 'cmp')
+  if ok then
+    -- Try to access completion in a way that might trigger an error
+    pcall(function()
+      cmp.complete()
+    end)
+  end
+end, { desc = 'Test error capture analysis' })
+
 -- Setup file search keymaps after a short delay to ensure plugins are loaded
 vim.defer_fn(function()
   setup_file_search_keymaps()
