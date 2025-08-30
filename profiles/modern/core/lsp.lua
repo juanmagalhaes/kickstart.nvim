@@ -33,10 +33,22 @@ local function on_attach(client, bufnr)
   
   setup_lsp_keymaps(bufnr)
   
-  -- Enable inlay hints if supported
+  -- Skip inlay hints for now to avoid API compatibility issues
+  -- They can be enabled manually if needed
   if client.server_capabilities and client.server_capabilities.inlayHintProvider then
-    vim.lsp.inlay_hint.enable(bufnr, true)
+    -- Silent - no notification needed
   end
+  
+  -- Disable unhelpful LSP messages like "2 fewer lines; before #1 7 seconds ago"
+  vim.lsp.handlers['textDocument/publishDiagnostics'] = vim.lsp.with(
+    vim.lsp.diagnostic.on_publish_diagnostics,
+    {
+      virtual_text = true,
+      signs = true,
+      underline = true,
+      update_in_insert = false,
+    }
+  )
 end
 
 -- Mason setup

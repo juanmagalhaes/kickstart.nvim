@@ -12,6 +12,12 @@ if has_luasnip then
   pcall(require('luasnip.loaders.from_vscode').lazy_load)
 end
 
+-- Check if cmp_nvim_lsp is available
+local has_cmp_lsp, cmp_lsp = pcall(require, 'cmp_nvim_lsp')
+if not has_cmp_lsp then
+  -- Silent - no notification needed for missing optional dependency
+end
+
 cmp.setup({
   snippet = {
     expand = function(args)

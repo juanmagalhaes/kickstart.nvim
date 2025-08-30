@@ -321,11 +321,11 @@ local plugins = {
         if current_level > 1 then
           -- Currently unfolded, fold to level 1
           vim.opt.foldlevel = 1
-          vim.notify('Folding enabled (level 1)', vim.log.levels.INFO)
+          -- Silent - no notification needed
         else
           -- Currently folded, unfold everything
           vim.opt.foldlevel = 999
-          vim.notify('Folding disabled (all folds open)', vim.log.levels.INFO)
+          -- Silent - no notification needed
         end
       end, { desc = 'Toggle folding on/off' })
       
@@ -356,6 +356,200 @@ local plugins = {
       })
       vim.keymap.set('i', '<C-K>', '<Plug>(copilot-accept-line)', {})
       vim.keymap.set('i', '<C-L>', '<Plug>(copilot-accept-word)', {})
+    end,
+  },
+
+  -- Modern command line UI (noice.nvim)
+  {
+    'folke/noice.nvim',
+    event = 'VeryLazy',
+    dependencies = {
+      'MunifTanjim/nui.nvim',
+      'rcarriga/nvim-notify',
+    },
+    config = function()
+      require('noice').setup({
+        -- Replace the UI for messages, cmdline and the popupmenu
+        cmdline = {
+          enabled = true,
+          view = 'cmdline_popup',
+          opts = {
+            position = {
+              row = '50%',
+              col = '50%',
+            },
+            size = {
+              width = 60,
+              height = 'auto',
+            },
+          },
+        },
+        -- Disable general message notifications to stop the noise
+        messages = {
+          enabled = false,
+        },
+        -- Only show critical notifications (errors, warnings)
+        -- Disable info notifications that are just noise
+        notify = {
+          enabled = true,
+          view = 'notify',
+          -- Only show errors and warnings
+          filter = function(notification)
+            return notification.level >= vim.log.levels.WARN
+          end,
+        },
+        popupmenu = {
+          enabled = true,
+          backend = 'nui',
+        },
+        lsp = {
+          progress = {
+            enabled = true,
+            format = 'lsp_progress',
+            format_done = 'lsp_progress_done',
+            throttle = 1000 / 30,
+            view = 'mini',
+          },
+          override = {
+            ['vim.lsp.util.convert_input_to_markdown_lines'] = true,
+            ['vim.lsp.util.stylize_markdown'] = true,
+            ['cmp.entry.get_documentation'] = true,
+          },
+          -- Completely disable LSP message display to stop the noise
+          message = {
+            enabled = false,
+          },
+        },
+        views = {
+          cmdline_popup = {
+            position = {
+              row = '50%',
+              col = '50%',
+            },
+            size = {
+              width = 60,
+              height = 'auto',
+            },
+          },
+          popupmenu = {
+            relative = 'editor',
+            position = {
+              row = 8,
+              col = '50%',
+            },
+            size = {
+              width = 60,
+              height = 10,
+            },
+            border = {
+              style = 'rounded',
+              padding = { 0, 1 },
+            },
+          },
+        },
+        routes = {
+          {
+            filter = {
+              event = 'msg_show',
+              kind = '',
+              find = 'written',
+            },
+            opts = { skip = true },
+          },
+          -- Filter out LSP noise messages
+          {
+            filter = {
+              event = 'notify',
+              find = 'fewer lines',
+            },
+            opts = { skip = true },
+          },
+          {
+            filter = {
+              event = 'notify',
+              find = 'before #',
+            },
+            opts = { skip = true },
+          },
+          {
+            filter = {
+              event = 'notify',
+              find = 'seconds ago',
+            },
+            opts = { skip = true },
+          },
+          {
+            filter = {
+              event = 'notify',
+              find = 'more lines',
+            },
+            opts = { skip = true },
+          },
+          -- Block the specific messages you're seeing
+          {
+            filter = {
+              event = 'notify',
+              find = 'Already at newest change',
+            },
+            opts = { skip = true },
+          },
+          {
+            filter = {
+              event = 'notify',
+              find = 'Already at oldest change',
+            },
+            opts = { skip = true },
+          },
+          -- Block all LSP info messages that are just noise
+          {
+            filter = {
+              event = 'notify',
+              kind = 'info',
+              find = 'lines',
+            },
+            opts = { skip = true },
+          },
+          {
+            filter = {
+              event = 'notify',
+              kind = 'info',
+              find = 'before #',
+            },
+            opts = { skip = true },
+          },
+          {
+            filter = {
+              event = 'notify',
+              kind = 'info',
+              find = 'seconds ago',
+            },
+            opts = { skip = true },
+          },
+          {
+            filter = {
+              event = 'notify',
+              kind = 'info',
+              find = 'Already at',
+            },
+            opts = { skip = true },
+          },
+        },
+        commands = {
+          history = {
+            view = 'split',
+            opts = { enter = true, format = 'details' },
+            filter = {
+              any = {
+                { event = 'notify' },
+                { error = true },
+                { warning = true },
+                { event = 'msg_show', kind = { '' } },
+                { event = 'lsp', kind = 'message' },
+              },
+            },
+          },
+        },
+      })
     end,
   },
 

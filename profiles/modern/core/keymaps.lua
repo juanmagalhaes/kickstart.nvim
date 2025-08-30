@@ -103,7 +103,7 @@ local function setup_file_search_keymaps()
     vim.keymap.set('n', '<C-f>', telescope.find_files, { desc = '[S]earch [F]iles' })
     vim.keymap.set('n', '<leader>sd', telescope.diagnostics, { desc = '[S]earch [D]iagnostics' })
     
-    vim.notify('Telescope loaded successfully - all file search keybindings active', vim.log.levels.INFO)
+    -- Silent success - no notification needed
   else
     -- Fallback keymaps when telescope is not available (exactly as in legacy)
     vim.keymap.set('n', '<C-p>', ':find ', { desc = 'Find file' })
@@ -115,6 +115,11 @@ end
 
 -- Project tree keybinding (matching legacy profile)
 vim.keymap.set('n', '<leader><space>', ':NvimTreeToggle<CR>', { desc = 'Toggle File Tree' })
+
+-- Noice.nvim keybindings for better command line experience
+vim.keymap.set('n', '<leader>nh', ':NoiceHistory<CR>', { desc = 'Show [N]oice [H]istory' })
+vim.keymap.set('n', '<leader>nc', ':NoiceCmdline<CR>', { desc = 'Show [N]oice [C]mdline' })
+vim.keymap.set('n', '<leader>nt', ':NoiceTelescope<CR>', { desc = 'Show [N]oice [T]elescope' })
 
 -- Setup file search keymaps after a short delay to ensure plugins are loaded
 vim.defer_fn(function()
