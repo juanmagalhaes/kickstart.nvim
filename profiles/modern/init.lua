@@ -6,6 +6,7 @@ dofile(vim.fn.stdpath("config") .. "/profiles/modern/core/bootstrap.lua")
 
 -- Load core modules
 dofile(vim.fn.stdpath("config") .. "/profiles/modern/core/options.lua")
+dofile(vim.fn.stdpath("config") .. "/profiles/modern/core/settings.lua")
 dofile(vim.fn.stdpath("config") .. "/profiles/modern/core/keymaps.lua")
 dofile(vim.fn.stdpath("config") .. "/profiles/modern/core/autocmds.lua")
 

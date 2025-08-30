@@ -80,3 +80,43 @@ end
 
 -- Make setup_lsp_keymaps available globally for other modules
 _G.setup_lsp_keymaps = setup_lsp_keymaps
+
+-- File search keymaps (exactly as in legacy)
+local function setup_file_search_keymaps()
+  local has_telescope, telescope = pcall(require, 'telescope.builtin')
+  
+  if has_telescope then
+    local function fuzzyFindFiles()
+      telescope.grep_string({
+        path_display = { 'smart' },
+        only_sort_text = true,
+        word_match = "-w",
+        search = '',
+      })
+    end
+
+    vim.keymap.set('n', '<C-p>', telescope.git_files, { desc = 'Search [G]it [F]iles' })
+    vim.keymap.set('n', 'K', telescope.grep_string, { desc = '[S]earch current [W]ord' })
+    vim.keymap.set('n', '<C-a>', fuzzyFindFiles, { desc = '[S]earch by [G]rep' })
+    vim.keymap.set('n', '<C-s>', telescope.live_grep, { desc = '[S]earch Live Exact Match' })
+    vim.keymap.set('n', '<leader>sh', telescope.help_tags, { desc = '[S]earch [H]elp' })
+    vim.keymap.set('n', '<C-f>', telescope.find_files, { desc = '[S]earch [F]iles' })
+    vim.keymap.set('n', '<leader>sd', telescope.diagnostics, { desc = '[S]earch [D]iagnostics' })
+    
+    vim.notify('Telescope loaded successfully - all file search keybindings active', vim.log.levels.INFO)
+  else
+    -- Fallback keymaps when telescope is not available (exactly as in legacy)
+    vim.keymap.set('n', '<C-p>', ':find ', { desc = 'Find file' })
+    vim.keymap.set('n', '<C-f>', ':find ', { desc = 'Find file' })
+    vim.keymap.set('n', 'K', '*', { desc = 'Search current word' })
+    vim.notify('Telescope not available - using fallback keybindings (this is normal during testing)', vim.log.levels.INFO)
+  end
+end
+
+-- Project tree keybinding (matching legacy profile)
+vim.keymap.set('n', '<leader><space>', ':NvimTreeToggle<CR>', { desc = 'Toggle File Tree' })
+
+-- Setup file search keymaps after a short delay to ensure plugins are loaded
+vim.defer_fn(function()
+  setup_file_search_keymaps()
+end, 100)

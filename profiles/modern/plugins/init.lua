@@ -87,7 +87,15 @@ local plugins = {
             path = 1,
           },
         },
-        lualine_x = { 'fileformat', 'filetype' },
+        lualine_x = { 
+          'fileformat', 
+          'filetype',
+          -- Add folding status indicator
+          function()
+            local fold_level = vim.opt.foldlevel:get()
+            return fold_level > 1 and '🔓' or '🔒'
+          end,
+        },
         lualine_y = {},
       },
     },
@@ -110,6 +118,33 @@ local plugins = {
   {
     'numToStr/Comment.nvim',
     opts = {}
+  },
+
+  -- Project Tree (nvim-tree)
+  {
+    'nvim-tree/nvim-tree.lua',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('nvim-tree').setup({
+        sort_by = "case_sensitive",
+        view = {
+          width = 30,
+        },
+        renderer = {
+          group_empty = true,
+        },
+        filters = {
+          dotfiles = false,
+        },
+      })
+
+      -- Keymaps for nvim-tree (matching legacy profile)
+      vim.keymap.set('n', '<leader><space>', ':NvimTreeToggle<CR>', { desc = 'Toggle File Tree' })
+      vim.keymap.set('n', 't', ':NvimTreeToggle<CR>', { desc = 'Toggle Node' })
+      vim.keymap.set('n', '<leader>f', function()
+        require('nvim-tree.api').tree.open({ find_file = true })
+      end, { desc = 'Reveal File In Tree' })
+    end,
   },
 
   -- Fuzzy finder
@@ -140,25 +175,8 @@ local plugins = {
 
       -- Enable telescope fzf native, if installed
       pcall(require('telescope').load_extension, 'fzf')
-
-      -- Telescope keymaps
-      local builtin = require('telescope.builtin')
-      vim.keymap.set('n', '<leader>?', builtin.oldfiles, { desc = '[?] Find recently opened files' })
-      vim.keymap.set('n', '<leader><space>', builtin.buffers, { desc = '[ ] Find existing buffers' })
-      vim.keymap.set('n', '<leader>/', function()
-        builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-          winblend = 10,
-          previewer = false,
-        })
-      end, { desc = '[/] Fuzzily search in current buffer' })
-
-      vim.keymap.set('n', '<leader>gf', builtin.git_files, { desc = 'Search [G]it [F]iles' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-      vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
-      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
+      
+      -- Note: Keymaps are now handled in core/keymaps.lua to match legacy profile
     end,
   },
 
@@ -233,39 +251,16 @@ local plugins = {
     },
   },
 
-  -- Nvim-tree
-  {
-    'nvim-tree/nvim-tree.lua',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
-    config = function()
-      require('nvim-tree').setup({
-        sort_by = "case_sensitive",
-        view = {
-          width = 30,
-        },
-        renderer = {
-          group_empty = true,
-        },
-        filters = {
-          dotfiles = false,
-        },
-      })
-
-      -- Keymaps for nvim-tree
-      vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle [E]xplorer' })
-      vim.keymap.set('n', '<leader>ef', ':NvimTreeFocus<CR>', { desc = 'Focus [E]xplorer' })
-    end,
-  },
-
   -- Nvim-ufo
   {
     'kevinhwang91/nvim-ufo',
     dependencies = { 'kevinhwang91/promise-async' },
     config = function()
       require('ufo').setup({
-        provider_selector = function(bufnr, filetype, buftype)
-          return { 'treesitter', 'indent' }
-        end,
+        -- Prevent auto-folding while typing
+        enable_get_line = false,
+        
+        -- Set reasonable default fold levels
         fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate)
           local newVirtText = {}
           local suffix = ('  ... %d '):format(endLnum - lnum)
@@ -292,13 +287,56 @@ local plugins = {
           table.insert(newVirtText, { suffix, 'MoreMsg' })
           return newVirtText
         end,
+        
+        -- Better fold provider selection
+        provider_selector = function(bufnr, filetype, buftype)
+          return { 'treesitter', 'indent' }
+        end,
+        
+        -- Prevent disruptive folding
+        close_fold_kinds = {},
+        
+        -- Start with no folding
+        initial_fold_level = 999,
+        
+        -- Prevent auto-folding on buffer changes
+        preview = {
+          win_config = {
+            border = 'rounded',
+            winblend = 0,
+            winhighlight = 'Normal:Normal',
+          },
+        },
       })
       
-      -- Keymaps for folding
-      vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
-      vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
-      vim.keymap.set('n', 'zr', require('ufo').openFoldsExceptKinds)
-      vim.keymap.set('n', 'zm', require('ufo').closeFoldsWith)
+      -- Keymaps for folding (less aggressive)
+      vim.keymap.set('n', 'zR', require('ufo').openAllFolds, { desc = 'Open all folds' })
+      vim.keymap.set('n', 'zM', require('ufo').closeAllFolds, { desc = 'Close all folds' })
+      vim.keymap.set('n', 'zr', require('ufo').openFoldsExceptKinds, { desc = 'Open folds except kinds' })
+      vim.keymap.set('n', 'zm', require('ufo').closeFoldsWith, { desc = 'Close folds with' })
+      
+      -- Simple toggle shortcut: <leader>z to toggle between no folding and level 1
+      vim.keymap.set('n', '<leader>z', function()
+        local current_level = vim.opt.foldlevel:get()
+        if current_level > 1 then
+          -- Currently unfolded, fold to level 1
+          vim.opt.foldlevel = 1
+          vim.notify('Folding enabled (level 1)', vim.log.levels.INFO)
+        else
+          -- Currently folded, unfold everything
+          vim.opt.foldlevel = 999
+          vim.notify('Folding disabled (all folds open)', vim.log.levels.INFO)
+        end
+      end, { desc = 'Toggle folding on/off' })
+      
+      -- Set initial fold level for all buffers (no folding)
+      vim.api.nvim_create_autocmd('BufReadPost', {
+        callback = function()
+          -- Set fold level to 999 (no folding initially)
+          vim.opt.foldlevel = 999
+          vim.opt.foldlevelstart = 999
+        end,
+      })
     end,
   },
 

@@ -25,10 +25,16 @@ end
 
 -- LSP on_attach function
 local function on_attach(client, bufnr)
+  -- Ensure bufnr is a valid number
+  if not bufnr or type(bufnr) ~= 'number' then
+    vim.notify('Invalid buffer number for LSP attachment', vim.log.levels.WARN)
+    return
+  end
+  
   setup_lsp_keymaps(bufnr)
   
   -- Enable inlay hints if supported
-  if client.server_capabilities.inlayHintProvider then
+  if client.server_capabilities and client.server_capabilities.inlayHintProvider then
     vim.lsp.inlay_hint.enable(bufnr, true)
   end
 end
@@ -41,23 +47,31 @@ if has_mason then
       border = 'rounded',
     },
   })
+else
+  vim.notify('Mason not available - skipping LSP setup', vim.log.levels.WARN)
+  return
 end
 
--- Mason LSP config
-local has_mason_lsp, mason_lsp = pcall(require, 'mason-lspconfig')
-if has_mason_lsp then
-  mason_lsp.setup({
-    ensure_installed = {
-      'lua_ls',
-      'tsserver',
-      'eslint',
-      'html',
-      'cssls',
-      'jsonls',
-    },
-    automatic_installation = true,
-  })
-end
+-- Skip mason-lspconfig completely to avoid automatic features
+-- We'll set up LSP servers directly with lspconfig instead
+
+-- Manual installation function for LSP servers
+vim.api.nvim_create_user_command('InstallLSPServers', function()
+  local servers = {
+    'lua_ls',
+    'ts_ls',
+    'eslint',
+    'html',
+    'cssls',
+    'jsonls',
+  }
+  
+  for _, server in ipairs(servers) do
+    vim.cmd('MasonInstall ' .. server)
+  end
+  
+  vim.notify('LSP servers installation started. Check Mason for progress.', vim.log.levels.INFO)
+end, {})
 
 -- LSP configs
 local has_lspconfig, lspconfig = pcall(require, 'lspconfig')
@@ -83,8 +97,8 @@ lspconfig.lua_ls.setup({
   },
 })
 
--- TypeScript/JavaScript LSP
-lspconfig.tsserver.setup({
+-- TypeScript/JavaScript LSP (using ts_ls instead of deprecated tsserver)
+lspconfig.ts_ls.setup({
   capabilities = capabilities,
   on_attach = on_attach,
   settings = {

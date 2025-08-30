@@ -20,6 +20,12 @@ cmp.setup({
       end
     end,
   },
+  -- Prevent completion from triggering too early
+  completion = {
+    completeopt = 'menu,menuone,noinsert,noselect',
+  },
+  -- Better trigger behavior
+  preselect = cmp.PreselectMode.None,
   mapping = {
     ['<C-p>'] = cmp.mapping.select_prev_item(),
     ['<C-n>'] = cmp.mapping.select_next_item(),
@@ -50,12 +56,20 @@ cmp.setup({
       end
     end, { 'i', 's' }),
   },
-  sources = {
-    { name = 'nvim_lsp' },
-    { name = 'luasnip' },
-    { name = 'buffer' },
-    { name = 'path' },
-  },
+  sources = (function()
+    local sources = {
+      { name = 'luasnip' },
+      { name = 'buffer' },
+      { name = 'path' },
+    }
+    
+    -- Only add LSP source if cmp_nvim_lsp is available
+    if has_cmp_lsp then
+      table.insert(sources, 1, { name = 'nvim_lsp' })
+    end
+    
+    return sources
+  end)(),
   window = {
     completion = cmp.config.window.bordered(),
     documentation = cmp.config.window.bordered(),
