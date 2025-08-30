@@ -37,7 +37,20 @@ cmp.setup({
     ['<C-n>'] = cmp.mapping.select_next_item(),
     ['<C-d>'] = cmp.mapping.scroll_docs(-4),
     ['<C-f>'] = cmp.mapping.scroll_docs(4),
-    ['<C-Space>'] = cmp.mapping.complete(),
+    ['<C-Space>'] = cmp.mapping(function(fallback)
+      -- Debug: Check if cmp is available
+      if not cmp then
+        vim.notify('cmp not available', vim.log.levels.ERROR)
+        return
+      end
+      
+      -- Simple completion trigger
+      if cmp.visible() then
+        cmp.close()
+      else
+        cmp.complete()
+      end
+    end),
     ['<C-e>'] = cmp.mapping.close(),
     ['<CR>'] = cmp.mapping.confirm({
       behavior = cmp.ConfirmBehavior.Replace,

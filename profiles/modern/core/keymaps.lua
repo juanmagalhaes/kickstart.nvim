@@ -121,6 +121,30 @@ vim.keymap.set('n', '<leader>nh', ':NoiceHistory<CR>', { desc = 'Show [N]oice [H
 vim.keymap.set('n', '<leader>nc', ':NoiceCmdline<CR>', { desc = 'Show [N]oice [C]mdline' })
 vim.keymap.set('n', '<leader>nt', ':NoiceTelescope<CR>', { desc = 'Show [N]oice [T]elescope' })
 
+-- Test completion system (temporary - remove after testing)
+vim.keymap.set('n', '<leader>ntc', function()
+  local has_cmp = pcall(require, 'cmp')
+  if has_cmp then
+    vim.notify('nvim-cmp is available', vim.log.levels.INFO)
+  else
+    vim.notify('nvim-cmp is NOT available', vim.log.levels.ERROR)
+  end
+  
+  local has_cmp_lsp = pcall(require, 'cmp_nvim_lsp')
+  if has_cmp_lsp then
+    vim.notify('cmp-nvim-lsp is available', vim.log.levels.INFO)
+  else
+    vim.notify('cmp-nvim-lsp is NOT available', vim.log.levels.ERROR)
+  end
+end, { desc = 'Test completion' })
+
+-- Test notification system (temporary - remove after testing)
+vim.keymap.set('n', '<leader>ntn', function()
+  vim.notify('This is a test ERROR message', vim.log.levels.ERROR)
+  vim.notify('This is a test WARNING message', vim.log.levels.WARN)
+  vim.notify('This is a test INFO message', vim.log.levels.INFO)
+end, { desc = 'Test notifications' })
+
 -- Setup file search keymaps after a short delay to ensure plugins are loaded
 vim.defer_fn(function()
   setup_file_search_keymaps()
